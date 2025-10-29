@@ -12,6 +12,23 @@ import toast from 'react-hot-toast'
 // Configure axios base URL
 axios.defaults.baseURL = 'http://localhost:5000'
 
+axios.interceptors.request.use((req) => {
+  console.log("AXIOS REQ:", req.method, req.url, req.data);
+  return req;
+});
+
+axios.interceptors.response.use(
+  (res) => {
+    console.log("AXIOS RES:", res.status, res.config.url, res.data);
+    return res;
+  },
+  (err) => {
+    console.error("AXIOS ERR:", err?.response?.status, err?.response?.data);
+    return Promise.reject(err);
+  }
+);
+
+
 const PollContext = createContext()
 
 const initialState = {
