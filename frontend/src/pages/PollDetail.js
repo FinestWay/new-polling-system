@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React , { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import {
@@ -170,9 +170,11 @@ const PollDetail = () => {
   }
 
   const getWinningOption = () => {
-    if (!results || results.length === 0) return null
-    const maxVotes = Math.max(...results.map(r => r.votes))
-    return results.find(r => r.votes === maxVotes)
+    // Check if results exists and is an array
+    if (!results || !Array.isArray(results) || results.length === 0) return null
+
+    const maxVotes = Math.max(...results.map(r => r?.votes || 0))
+    return results.find(r => r?.votes === maxVotes)
   }
 
   if (loading) {
@@ -323,12 +325,12 @@ const PollDetail = () => {
 
           <div className='space-y-4'>
             {poll.options.map((option, index) => {
-              const result = results && results[index]
-              const percentage = result
-                ? poll.totalVotes > 0
+              const result = results && results[index] ? results[index] : null
+              const percentage =
+                result && result.votes !== undefined && poll.totalVotes > 0
                   ? Math.round((result.votes / poll.totalVotes) * 100)
                   : 0
-                : 0
+
               const isUserVote = userVoted === index
               const canVote =
                 isAuthenticated &&
@@ -359,14 +361,14 @@ const PollDetail = () => {
                     <div className='flex items-center gap-3'>
                       {isUserVote && <FiCheck className='text-blue-600' />}
                       <span className='font-medium text-gray-800'>
-                        {option}
+                        {option.text}
                       </span>
                     </div>
 
                     {showResults && (
                       <div className='flex items-center gap-4'>
                         <span className='text-sm font-medium text-gray-600'>
-                          {result.votes} votes
+                          {result?.votes || 0} votes
                         </span>
                         <span className='text-lg font-bold text-gray-800'>
                           {percentage}%
