@@ -271,4 +271,3 @@ If you encounter any issues or have questions:
 
 =======
 # new-polling-system
->>>>>>> d153e6210f653a414142e384eff8f7a4160e4f8c
