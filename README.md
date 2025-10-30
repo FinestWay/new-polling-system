@@ -165,7 +165,7 @@ FRONTEND_URL=http://localhost:3000
 
 ## 🏗️ Project Structure
 
-```
+
 polling-system/
 ├── backend/                 # Backend API
 │   ├── config/             # Configuration files
@@ -186,7 +186,6 @@ polling-system/
 │   └── package.json
 ├── package.json          # Root package.json
 └── README.md
-```
 
 ## 🔌 API Endpoints
 
@@ -264,10 +263,5 @@ If you encounter any issues or have questions:
 
 ---
 
-**Happy Polling! 🗳️**
-
-
-
-
 =======
-# new-polling-system
+## new-polling-system
