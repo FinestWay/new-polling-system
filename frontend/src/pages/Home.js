@@ -54,11 +54,12 @@ const Home = () => {
           Create and Vote on Polls
         </h1>
         <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-          Join thousands of users creating and participating in polls. Get real-time results and insights.
+          Join thousands of users creating and participating in polls. Get
+          real-time results and insights.
         </p>
         {isAuthenticated ? (
           <Link to="/create" className="btn btn-primary text-lg px-8 py-3">
-            Create Your First Poll
+            Create Your Poll
           </Link>
         ) : (
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -74,7 +75,10 @@ const Home = () => {
 
       {/* Search and Filters */}
       <div className="card mb-8">
-        <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
+        <form
+          onSubmit={handleSearch}
+          className="flex flex-col md:flex-row gap-4"
+        >
           <div className="flex-1 relative">
             <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <input
@@ -90,8 +94,10 @@ const Home = () => {
             onChange={(e) => setCategory(e.target.value)}
             className="input md:w-48"
           >
-            {categories.map(cat => (
-              <option key={cat} value={cat}>{cat}</option>
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
             ))}
           </select>
           <select
@@ -99,7 +105,7 @@ const Home = () => {
             onChange={(e) => setSortBy(e.target.value)}
             className="input md:w-48"
           >
-            {sortOptions.map(option => (
+            {sortOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
@@ -116,7 +122,7 @@ const Home = () => {
         <LoadingSpinner />
       ) : polls.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {polls.map(poll => (
+          {polls.map((poll) => (
             <PollCard key={poll._id} poll={poll} />
           ))}
         </div>
@@ -125,12 +131,13 @@ const Home = () => {
           <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <FiEye className="w-12 h-12 text-gray-400" />
           </div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">No polls found</h3>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            No polls found
+          </h3>
           <p className="text-gray-600 mb-6">
-            {searchTerm || category !== 'All' 
-              ? 'Try adjusting your search criteria'
-              : 'Be the first to create a poll!'
-            }
+            {searchTerm || category !== "All"
+              ? "Try adjusting your search criteria"
+              : "Be the first to create a poll!"}
           </p>
           {isAuthenticated && (
             <Link to="/create" className="btn btn-primary">
@@ -145,17 +152,15 @@ const Home = () => {
         <div className="flex justify-center mt-8">
           <nav className="flex items-center space-x-2">
             <button
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
               className="btn btn-outline disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Previous
             </button>
-            <span className="px-4 py-2 text-gray-700">
-              Page {currentPage}
-            </span>
+            <span className="px-4 py-2 text-gray-700">Page {currentPage}</span>
             <button
-              onClick={() => setCurrentPage(prev => prev + 1)}
+              onClick={() => setCurrentPage((prev) => prev + 1)}
               disabled={polls.length < 10}
               className="btn btn-outline disabled:opacity-50 disabled:cursor-not-allowed"
             >

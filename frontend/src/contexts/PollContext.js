@@ -10,7 +10,7 @@ import { io } from 'socket.io-client'
 import toast from 'react-hot-toast'
 
 // Configure axios base URL
-axios.defaults.baseURL = 'http://localhost:5000'
+axios.defaults.baseURL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000'
 
 axios.interceptors.request.use((req) => {
   console.log("AXIOS REQ:", req.method, req.url, req.data);
@@ -98,7 +98,7 @@ export const PollProvider = ({ children }) => {
 
   // Initialize socket connection once on mount
   useEffect(() => {
-    const socket = io('http://localhost:5000')
+    const socket = io(process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000')
     dispatch({ type: 'SET_SOCKET', payload: socket })
 
     // Listen for real-time poll updates

@@ -3,7 +3,7 @@ import axios from 'axios'
 import toast from 'react-hot-toast'
 
 // Configure axios base URL
-axios.defaults.baseURL = 'http://localhost:5000'
+axios.defaults.baseURL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000'
 
 const AuthContext = createContext()
 
@@ -84,7 +84,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     checkAuth()
-  }, []) // ✅ FIXED: Added empty dependency array - runs only once on mount
+  }, []) // eslint-disable-next-line react-hooks/exhaustive-deps
 
   // Add axios response interceptor to handle token expiration
   useEffect(() => {
