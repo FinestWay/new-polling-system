@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { FiMail, FiLock, FiUser, FiEye, FiEyeOff } from 'react-icons/fi';
 
@@ -14,9 +14,10 @@ const Register = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [successMessage, setSuccessMessage] = useState('');
+  const [devVerificationLink, setDevVerificationLink] = useState('');
 
   const { register } = useAuth();
-  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -76,7 +77,14 @@ const Register = () => {
     setLoading(false);
 
     if (result.success) {
-      navigate('/');
+      setSuccessMessage('Registration successful! Please check your email for a verification link before logging in.');
+      if (result.verificationUrl) {
+        setDevVerificationLink(result.verificationUrl);
+      } else {
+        setDevVerificationLink('');
+      }
+      setFormData({ username: '', email: '', password: '', confirmPassword: '' });
+      setErrors({});
     }
   };
 
@@ -97,6 +105,21 @@ const Register = () => {
             </Link>
           </p>
         </div>
+
+        {successMessage && (
+          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md">
+            <p>{successMessage}</p>
+            {devVerificationLink && (
+              <p className="mt-2 text-sm">
+                Dev shortcut: <a className="underline" href={devVerificationLink}>{devVerificationLink}</a>
+              </p>
+            )}
+            <p className="mt-2 text-sm">
+              Already received the email?{' '}
+              <Link to="/login" className="underline font-medium">Sign in</Link>
+            </p>
+          </div>
+        )}
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">

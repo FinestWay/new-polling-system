@@ -6,7 +6,7 @@ const { auth, optionalAuth } = require('../middleware/auth');
 const router = express.Router();
 
 // Vote on a poll
-router.post('/:pollId', optionalAuth, [
+router.post('/:pollId', auth, [
   body('optionIndex')
     .isInt({ min: 0 })
     .withMessage('Option index must be a valid number'),

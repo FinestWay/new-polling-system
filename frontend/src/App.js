@@ -11,6 +11,7 @@ import MyPolls from './pages/MyPolls';
 import Profile from './pages/Profile';
 import VotingHistory from './pages/VotingHistory';
 import LoadingSpinner from './components/LoadingSpinner';
+import VerifyEmail from './pages/VerifyEmail';
 
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -37,6 +38,7 @@ const App = () => {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/poll/:id" element={<PollDetail />} />
           <Route path="/share/:code" element={<PollDetail />} />
           <Route 

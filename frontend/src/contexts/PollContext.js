@@ -10,7 +10,7 @@ import { io } from 'socket.io-client'
 import toast from 'react-hot-toast'
 
 // Configure axios base URL
-axios.defaults.baseURL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000'
+axios.defaults.baseURL = 'http://localhost:5000'
 
 axios.interceptors.request.use((req) => {
   console.log("AXIOS REQ:", req.method, req.url, req.data);
@@ -88,6 +88,14 @@ const pollReducer = (state, action) => {
             ? action.payload
             : state.currentPoll
       }
+    case 'CLEAR_POLLS':
+      return {
+        ...state,
+        polls: [],
+        currentPoll: null,
+        loading: false,
+        error: null
+      }
     default:
       return state
   }
@@ -98,7 +106,7 @@ export const PollProvider = ({ children }) => {
 
   // Initialize socket connection once on mount
   useEffect(() => {
-    const socket = io(process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000')
+    const socket = io('http://localhost:5000')
     dispatch({ type: 'SET_SOCKET', payload: socket })
 
     // Listen for real-time poll updates
@@ -293,6 +301,10 @@ export const PollProvider = ({ children }) => {
     [state.socket]
   )
 
+  const clearPolls = useCallback(() => {
+    dispatch({ type: 'CLEAR_POLLS' })
+  }, [])
+
   const value = {
     polls: state.polls,
     currentPoll: state.currentPoll,
@@ -309,7 +321,8 @@ export const PollProvider = ({ children }) => {
     fetchUserPolls,
     fetchVotingHistory,
     fetchPollAnalytics,
-    leavePoll
+    leavePoll,
+    clearPolls
   }
 
   return <PollContext.Provider value={value}>{children}</PollContext.Provider>

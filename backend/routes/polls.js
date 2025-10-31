@@ -5,10 +5,56 @@ const { auth, optionalAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
+const getClientIp = (req) => {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (forwarded) {
+    return forwarded.split(',')[0].trim();
+  }
+  return req.connection?.remoteAddress || req.socket?.remoteAddress || req.ip || '';
+};
+
+const registerView = async (poll, req) => {
+  if (!poll) return;
+
+  if (!Array.isArray(poll.viewedBy)) {
+    poll.viewedBy = [];
+  }
+  if (!Array.isArray(poll.viewedIPs)) {
+    poll.viewedIPs = [];
+  }
+
+  let shouldIncrement = false;
+  const viewerId = req.user?._id ? req.user._id.toString() : null;
+
+  if (viewerId) {
+    const hasViewed = poll.viewedBy.some(viewer => viewer?.toString() === viewerId);
+    if (!hasViewed) {
+      poll.viewedBy.push(viewerId);
+      shouldIncrement = true;
+    }
+  } else {
+    const viewerIp = getClientIp(req);
+    if (viewerIp) {
+      const hasViewedIp = poll.viewedIPs.includes(viewerIp);
+      if (!hasViewedIp) {
+        poll.viewedIPs.push(viewerIp);
+        shouldIncrement = true;
+      }
+    }
+  }
+
+  if (shouldIncrement) {
+    poll.views = (poll.views || 0) + 1;
+    await poll.save({ validateBeforeSave: false });
+  }
+};
+
 // Get all polls (public)
 router.get('/', optionalAuth, async (req, res) => {
   try {
     const { page = 1, limit = 10, category, search, sort = 'newest' } = req.query;
+    const pageNum = Math.max(parseInt(page, 10) || 1, 1);
+    const limitNum = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 100);
     
     const query = { isPublic: true, isActive: true };
     
@@ -45,21 +91,36 @@ router.get('/', optionalAuth, async (req, res) => {
     const polls = await Poll.find(query)
       .populate('creator', 'username avatar')
       .sort(sortOption)
-      .limit(limit * 1)
-      .skip((page - 1) * limit)
+      .limit(limitNum)
+      .skip((pageNum - 1) * limitNum)
       .exec();
     
     const total = await Poll.countDocuments(query);
     
     res.json({
       polls,
-      totalPages: Math.ceil(total / limit),
-      currentPage: page,
+      totalPages: Math.ceil(total / limitNum),
+      currentPage: pageNum,
       total
     });
   } catch (error) {
     console.error('Get polls error:', error);
-    res.status(500).json({ message: 'Server error' });
+    // Graceful fallback for DB connectivity issues in development
+    const msg = (error?.name || '') + ' ' + (error?.message || '');
+    const isDbConnectivityError =
+      /ServerSelection|ECONN|ENOTFOUND|ECONNREFUSED|TLS|certificate|buffering timed out/i.test(msg);
+
+    if (isDbConnectivityError) {
+      return res.status(200).json({
+        polls: [],
+        totalPages: 0,
+        currentPage: 1,
+        total: 0,
+        warning: 'Database unavailable; returning empty list'
+      });
+    }
+
+    res.status(500).json({ message: 'Server error', error: error?.message });
   }
 });
 
@@ -74,9 +135,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
       return res.status(404).json({ message: 'Poll not found' });
     }
     
-    // Increment views
-    poll.views += 1;
-    await poll.save();
+    await registerView(poll, req);
     
     // Check if user has voted
     let userVoted = null;
@@ -111,9 +170,7 @@ router.get('/share/:code', optionalAuth, async (req, res) => {
       return res.status(404).json({ message: 'Poll not found' });
     }
     
-    // Increment views
-    poll.views += 1;
-    await poll.save();
+    await registerView(poll, req);
     
     // Check if user has voted
     let userVoted = null;

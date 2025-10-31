@@ -70,6 +70,13 @@ const pollSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  viewedBy: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  viewedIPs: [{
+    type: String
+  }],
   shareCode: {
     type: String,
     unique: true,
@@ -93,6 +100,14 @@ pollSchema.virtual('isExpired').get(function() {
   return new Date() > this.expiresAt;
 });
 
+const normalizeId = (value) => {
+  if (!value) return null;
+  if (typeof value === 'string') return value;
+  if (value instanceof mongoose.Types.ObjectId) return value.toString();
+  if (typeof value === 'object' && value._id) return value._id.toString();
+  return value.toString();
+};
+
 // Method to add vote
 pollSchema.methods.addVote = function(optionIndex, userId) {
   if (this.isExpired) {
@@ -108,20 +123,31 @@ pollSchema.methods.addVote = function(optionIndex, userId) {
     throw new Error('Invalid option');
   }
   
-  // Check if user already voted (unless anonymous votes are allowed)
-  if (!this.allowAnonymousVotes && userId) {
-    const hasVoted = this.options.some(opt => 
-      opt.voters.includes(userId)
+  const userIdString = normalizeId(userId);
+
+  if (!this.allowAnonymousVotes && !userIdString) {
+    throw new Error('Login required to vote on this poll');
+  }
+
+  const alreadyVotedThisOption = userIdString
+    ? option.voters.some(voter => normalizeId(voter) === userIdString)
+    : false;
+
+  if (alreadyVotedThisOption) {
+    throw new Error('You have already voted for this option');
+  }
+  if (!this.allowMultipleVotes && userIdString) {
+    const hasVoted = this.options.some(opt =>
+      opt.voters.some(voter => normalizeId(voter) === userIdString)
     );
-    
-    if (hasVoted && !this.allowMultipleVotes) {
-      throw new Error('User has already voted');
+    if (hasVoted) {
+      throw new Error('You have already voted on this poll');
     }
   }
   
   option.votes += 1;
-  if (userId && !this.allowAnonymousVotes) {
-    option.voters.push(userId);
+  if (userIdString) {
+    option.voters.push(new mongoose.Types.ObjectId(userIdString));
   }
   this.totalVotes += 1;
   
@@ -135,14 +161,18 @@ pollSchema.methods.removeVote = function(optionIndex, userId) {
     throw new Error('Invalid option');
   }
   
-  const voterIndex = option.voters.indexOf(userId);
+  if (!userId) {
+    throw new Error('Must be logged in to unvote');
+  }
+  const userIdString = normalizeId(userId);
+  const voterIndex = option.voters.findIndex(voter => normalizeId(voter) === userIdString);
   if (voterIndex === -1) {
     throw new Error('User has not voted for this option');
   }
   
-  option.votes -= 1;
+  option.votes = Math.max(option.votes - 1, 0);
   option.voters.splice(voterIndex, 1);
-  this.totalVotes -= 1;
+  this.totalVotes = Math.max(this.totalVotes - 1, 0);
   
   return this.save();
 };

@@ -7,7 +7,7 @@ import PollCard from '../components/PollCard';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const Home = () => {
-  const { polls, loading, fetchPolls } = usePoll();
+  const { polls, loading, fetchPolls, clearPolls } = usePoll();
   const { isAuthenticated } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [category, setCategory] = useState('All');
@@ -32,19 +32,45 @@ const Home = () => {
   // }, [currentPage, searchTerm, category, sortBy]);
 
   useEffect(() => {
-  fetchPolls({
-    page: currentPage,
-    search: searchTerm,
-    category: category === 'All' ? '' : category,
-    sort: sortBy
-  })
-}, [currentPage, searchTerm, category, sortBy, fetchPolls])
+    if (!isAuthenticated) {
+      clearPolls();
+      return;
+    }
+
+    fetchPolls({
+      page: currentPage,
+      search: searchTerm,
+      category: category === 'All' ? '' : category,
+      sort: sortBy
+    })
+  }, [isAuthenticated, currentPage, searchTerm, category, sortBy, fetchPolls, clearPolls])
 
 
   const handleSearch = (e) => {
     e.preventDefault();
     setCurrentPage(1);
   };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="max-w-4xl mx-auto text-center py-16">
+        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+          Welcome to PollMaster
+        </h1>
+        <p className="text-lg text-gray-600 mb-8">
+          Sign in or create an account to explore polls, cast your votes, and create your own.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Link to="/register" className="btn btn-primary text-lg px-8 py-3">
+            Get Started
+          </Link>
+          <Link to="/login" className="btn btn-outline text-lg px-8 py-3">
+            Sign In
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-6xl mx-auto">
