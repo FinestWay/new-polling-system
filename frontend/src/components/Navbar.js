@@ -1,18 +1,58 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { FiMenu, FiX, FiUser, FiLogOut, FiSettings, FiTrendingUp } from 'react-icons/fi';
+import React, { useState } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import {
+  FiMenu,
+  FiX,
+  FiUser,
+  FiLogOut,
+  FiSettings,
+  FiTrendingUp,
+} from "react-icons/fi";
 
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
     setIsUserMenuOpen(false);
-    navigate('/');
+    navigate("/");
+  };
+
+  // helper to check active path
+  const isActive = (path) => {
+    // exact match for home, basic startsWith for others to catch nested routes if needed
+    if (path === "/") return location.pathname === "/";
+    return location.pathname.startsWith(path);
+  };
+
+  // link component with underline animation
+  const NavLink = ({ to, children, onClick }) => {
+    const active = isActive(to);
+    return (
+      <Link
+        to={to}
+        onClick={onClick}
+        className="relative group inline-block px-1"
+      >
+        <span
+          className={`text-gray-700 transition-colors ${
+            active ? "text-primary-600" : "hover:text-primary-600"
+          }`}
+        >
+          {children}
+        </span>
+        {/* underline: left -> right animation via width */}
+        <span
+          className={`absolute left-0 bottom-0 h-0.5 bg-primary-600 transition-all duration-300 ease-out transform origin-left
+            ${active ? "w-full" : "w-0 group-hover:w-full"}`}
+        />
+      </Link>
+    );
   };
 
   return (
@@ -29,17 +69,12 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link to="/" className="text-gray-700 hover:text-primary-600 transition-colors">
-              Home
-            </Link>
+            <NavLink to="/">Home</NavLink>
+
             {isAuthenticated && (
               <>
-                <Link to="/create" className="text-gray-700 hover:text-primary-600 transition-colors">
-                  Create Poll
-                </Link>
-                <Link to="/my-polls" className="text-gray-700 hover:text-primary-600 transition-colors">
-                  My Polls
-                </Link>
+                <NavLink to="/create">Create Poll</NavLink>
+                <NavLink to="/my-polls">My Polls</NavLink>
               </>
             )}
           </div>
@@ -104,7 +139,11 @@ const Navbar = () => {
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="md:hidden p-2 rounded-lg text-gray-700 hover:bg-gray-100"
           >
-            {isMenuOpen ? <FiX className="w-6 h-6" /> : <FiMenu className="w-6 h-6" />}
+            {isMenuOpen ? (
+              <FiX className="w-6 h-6" />
+            ) : (
+              <FiMenu className="w-6 h-6" />
+            )}
           </button>
         </div>
 
@@ -184,4 +223,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-

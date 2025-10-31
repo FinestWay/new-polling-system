@@ -76,13 +76,13 @@ const Home = () => {
     <div className="max-w-6xl mx-auto">
       {/* Hero Section */}
       <div className="text-center mb-12">
-        <h1 className="text-4xl md:text-6xl font-bold text-gradient mb-4">
+        {/* <h1 className="text-4xl md:text-6xl font-bold text-gradient mb-4">
           Create and Vote on Polls
         </h1>
         <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
           Join thousands of users creating and participating in polls. Get
           real-time results and insights.
-        </p>
+        </p> */}
         {isAuthenticated ? (
           <Link to="/create" className="btn btn-primary text-lg px-8 py-3">
             Create Your Poll

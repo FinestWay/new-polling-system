@@ -1,35 +1,35 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { FiMail, FiLock, FiUser, FiEye, FiEyeOff } from 'react-icons/fi';
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import { FiMail, FiLock, FiUser, FiEye, FiEyeOff } from "react-icons/fi";
 
 const Register = () => {
   const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
-  const [successMessage, setSuccessMessage] = useState('');
-  const [devVerificationLink, setDevVerificationLink] = useState('');
+  const [successMessage, setSuccessMessage] = useState("");
 
   const { register } = useAuth();
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
     // Clear error when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: ''
+        [name]: "",
       }));
     }
   };
@@ -38,29 +38,30 @@ const Register = () => {
     const newErrors = {};
 
     if (!formData.username) {
-      newErrors.username = 'Username is required';
+      newErrors.username = "Username is required";
     } else if (formData.username.length < 3) {
-      newErrors.username = 'Username must be at least 3 characters';
+      newErrors.username = "Username must be at least 3 characters";
     } else if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
-      newErrors.username = 'Username can only contain letters, numbers, and underscores';
+      newErrors.username =
+        "Username can only contain letters, numbers, and underscores";
     }
 
     if (!formData.email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = "Email is required";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
+      newErrors.email = "Email is invalid";
     }
 
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = "Password is required";
     } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+      newErrors.password = "Password must be at least 6 characters";
     }
 
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
+      newErrors.confirmPassword = "Please confirm your password";
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = "Passwords do not match";
     }
 
     setErrors(newErrors);
@@ -69,21 +70,41 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setLoading(true);
-    const result = await register(formData.username, formData.email, formData.password);
+    const result = await register(
+      formData.username,
+      formData.email,
+      formData.password
+    );
     setLoading(false);
 
     if (result.success) {
-      setSuccessMessage('Registration successful! Please check your email for a verification link before logging in.');
-      if (result.verificationUrl) {
-        setDevVerificationLink(result.verificationUrl);
-      } else {
-        setDevVerificationLink('');
+      // If register returned a token and auto-logged in the user, redirect to home
+      if (result.loggedIn) {
+        // optionally clear sensitive fields
+        setFormData({
+          username: "",
+          email: "",
+          password: "",
+          confirmPassword: "",
+        });
+        setErrors({});
+        // redirect to home or dashboard
+        navigate("/");
+        return;
       }
-      setFormData({ username: '', email: '', password: '', confirmPassword: '' });
+
+      // fallback (if backend doesn't auto-login): show a generic success
+      setSuccessMessage(result.message || "Registration successful!");
+      setFormData({
+        username: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+      });
       setErrors({});
     }
   };
@@ -99,8 +120,11 @@ const Register = () => {
             Create your account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Or{' '}
-            <Link to="/login" className="font-medium text-primary-600 hover:text-primary-500">
+            Or{" "}
+            <Link
+              to="/login"
+              className="font-medium text-primary-600 hover:text-primary-500"
+            >
               sign in to your existing account
             </Link>
           </p>
@@ -109,14 +133,11 @@ const Register = () => {
         {successMessage && (
           <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md">
             <p>{successMessage}</p>
-            {devVerificationLink && (
-              <p className="mt-2 text-sm">
-                Dev shortcut: <a className="underline" href={devVerificationLink}>{devVerificationLink}</a>
-              </p>
-            )}
             <p className="mt-2 text-sm">
-              Already received the email?{' '}
-              <Link to="/login" className="underline font-medium">Sign in</Link>
+              Already have an account?{" "}
+              <Link to="/login" className="underline font-medium">
+                Sign in
+              </Link>
             </p>
           </div>
         )}
@@ -124,7 +145,10 @@ const Register = () => {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="username"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Username
               </label>
               <div className="mt-1 relative">
@@ -139,7 +163,9 @@ const Register = () => {
                   required
                   value={formData.username}
                   onChange={handleChange}
-                  className={`input pl-10 ${errors.username ? 'border-red-500 focus:ring-red-500' : ''}`}
+                  className={`input pl-10 ${
+                    errors.username ? "border-red-500 focus:ring-red-500" : ""
+                  }`}
                   placeholder="Choose a username"
                 />
               </div>
@@ -149,7 +175,10 @@ const Register = () => {
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Email address
               </label>
               <div className="mt-1 relative">
@@ -164,7 +193,9 @@ const Register = () => {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className={`input pl-10 ${errors.email ? 'border-red-500 focus:ring-red-500' : ''}`}
+                  className={`input pl-10 ${
+                    errors.email ? "border-red-500 focus:ring-red-500" : ""
+                  }`}
                   placeholder="Enter your email"
                 />
               </div>
@@ -174,7 +205,10 @@ const Register = () => {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Password
               </label>
               <div className="mt-1 relative">
@@ -184,12 +218,14 @@ const Register = () => {
                 <input
                   id="password"
                   name="password"
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   autoComplete="new-password"
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className={`input pl-10 pr-10 ${errors.password ? 'border-red-500 focus:ring-red-500' : ''}`}
+                  className={`input pl-10 pr-10 ${
+                    errors.password ? "border-red-500 focus:ring-red-500" : ""
+                  }`}
                   placeholder="Create a password"
                 />
                 <button
@@ -210,7 +246,10 @@ const Register = () => {
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="confirmPassword"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Confirm Password
               </label>
               <div className="mt-1 relative">
@@ -220,12 +259,16 @@ const Register = () => {
                 <input
                   id="confirmPassword"
                   name="confirmPassword"
-                  type={showConfirmPassword ? 'text' : 'password'}
+                  type={showConfirmPassword ? "text" : "password"}
                   autoComplete="new-password"
                   required
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className={`input pl-10 pr-10 ${errors.confirmPassword ? 'border-red-500 focus:ring-red-500' : ''}`}
+                  className={`input pl-10 pr-10 ${
+                    errors.confirmPassword
+                      ? "border-red-500 focus:ring-red-500"
+                      : ""
+                  }`}
                   placeholder="Confirm your password"
                 />
                 <button
@@ -241,7 +284,9 @@ const Register = () => {
                 </button>
               </div>
               {errors.confirmPassword && (
-                <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.confirmPassword}
+                </p>
               )}
             </div>
           </div>
@@ -258,15 +303,18 @@ const Register = () => {
                   Creating account...
                 </div>
               ) : (
-                'Create account'
+                "Create account"
               )}
             </button>
           </div>
 
           <div className="text-center">
             <p className="text-sm text-gray-600">
-              Already have an account?{' '}
-              <Link to="/login" className="font-medium text-primary-600 hover:text-primary-500">
+              Already have an account?{" "}
+              <Link
+                to="/login"
+                className="font-medium text-primary-600 hover:text-primary-500"
+              >
                 Sign in here
               </Link>
             </p>
@@ -278,7 +326,3 @@ const Register = () => {
 };
 
 export default Register;
-
-
-
-
